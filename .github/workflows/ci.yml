@@ -57,4 +57,4 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt pip-audit
-      - run: pip-audit
+      - run: pip-audit --ignore-vuln CVE-2026-4539

@@ -1,9 +1,9 @@
 """Domain enums for String Free, mirroring Supabase DB enums."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     DRAFT = "draft"
     PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
@@ -14,14 +14,14 @@ class TaskStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
 
-class ErrorCategory(str, Enum):
+class ErrorCategory(StrEnum):
     ARCHITECTURE = "architecture"
     LOGIC = "logic"
     VALIDATION = "validation"
@@ -33,13 +33,13 @@ class ErrorCategory(str, Enum):
     WORKFLOW = "workflow"
 
 
-class ApprovalResult(str, Enum):
+class ApprovalResult(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
 
 
-class TaskSource(str, Enum):
+class TaskSource(StrEnum):
     TELEGRAM = "telegram"
     API = "api"
     ERROR_AUTO = "error_auto"
