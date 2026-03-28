@@ -23,6 +23,14 @@ class TaskCreate(BaseModel):
     source: TaskSource = TaskSource.MANUAL
 
 
+class TaskUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    status: TaskStatus | None = None
+    structural_flag: bool | None = None
+    priority: str | None = None
+
+
 class TaskResponse(BaseModel):
     id: UUID
     title: str
@@ -104,3 +112,48 @@ class ImprovementTaskResponse(BaseModel):
     source_error_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
+
+
+# --- Webhook Schemas ---
+
+
+class WebhookPayload(BaseModel):
+    """Generic webhook payload wrapper."""
+
+    event: str | None = None
+    data: dict | None = None
+
+
+class SentryWebhookPayload(BaseModel):
+    """Sentry webhook event payload."""
+
+    action: str | None = None
+    data: dict | None = None
+    actor: dict | None = None
+
+
+class BillingWebhookPayload(BaseModel):
+    """Lemon Squeezy webhook payload."""
+
+    meta: dict | None = None
+    data: dict | None = None
+
+
+# --- AI Response Schemas ---
+
+
+class AIParsedTask(BaseModel):
+    """Response from AI task parsing."""
+
+    title: str
+    description: str | None = None
+    priority: str = "medium"
+    due_date: str | None = None
+    tags: list[str] = []
+
+
+class AIErrorSummary(BaseModel):
+    """Response from AI error summarization."""
+
+    summary: str
+    proposed_fix: str

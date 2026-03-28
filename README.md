@@ -15,21 +15,27 @@ String Free helps individual builders and small teams ship software with fewer e
 - **AI:** Google Gemini API (Phase 1), optional local LLM (Phase 2)
 - **Messaging:** Telegram Bot API + future Mini App
 - **Error Tracking:** Sentry
+- **Billing:** Lemon Squeezy (subscription management)
 
 ## Project Structure
 
 ```
 app/
-  core/           # config, database, logging, security
+  core/           # config, database, auth, billing
   models/         # enums, Pydantic schemas
   services/       # task_orchestrator, ai_service, error_analyzer, telegram_service
-  api/routes/     # health, tasks, errors, improvement_tasks, telegram, webhooks
+  api/routes/     # health, tasks, telegram, webhooks
   main.py
 database/
   schema.sql      # Supabase schema (run in SQL Editor)
 docs/
   01-product-overview.md
   02-architecture.md
+tests/
+  test_health.py
+  test_tasks.py
+  test_webhooks.py
+  test_ai_service.py
 ```
 
 ## Quick Start
@@ -55,19 +61,105 @@ uvicorn app.main:app --reload
 
 Open http://localhost:8000/health/ to verify.
 
+## API Endpoints
+
+### Health
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health/` | System health check |
+
+### Tasks
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/tasks/` | List tasks (query: `status`, `limit`, `offset`, `user_id`) |
+| POST | `/tasks/` | Create a new task |
+| GET | `/tasks/{task_id}` | Get a single task |
+| PATCH | `/tasks/{task_id}` | Update task fields |
+| DELETE | `/tasks/{task_id}` | Soft-delete (archive) a task |
+
+### Telegram
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/telegram/webhook` | Receive Telegram bot updates |
+
+### Webhooks
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/webhooks/sentry` | Receive Sentry error alerts |
+| POST | `/webhooks/billing` | Receive Lemon Squeezy billing events |
+
+## Telegram Bot Setup
+
+1. Create a bot via [@BotFather](https://t.me/BotFather) and get the token
+2. Set `TELEGRAM_BOT_TOKEN` in your `.env`
+3. Set `TELEGRAM_CHAT_ID` to your chat/group ID
+4. Set the webhook URL with:
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://your-domain.com/telegram/webhook"}'
+   ```
+
+### Bot Commands
+- `/start` — Welcome message and quick guide
+- `/task <message>` — AI parses your message into a structured task
+- `/list` — Show your active tasks with status
+- `/done <id>` — Mark a task as complete
+- `/help` — Command reference
+
+## Sentry Webhook Configuration
+
+1. In your Sentry project, go to **Settings > Integrations > Webhooks**
+2. Add a new webhook with URL: `https://your-domain.com/webhooks/sentry`
+3. Select the alert types you want to forward (recommended: all issue alerts)
+4. Set `SENTRY_DSN` in `.env` to enable client-side error tracking
+
+When Sentry fires an alert, String Free will:
+- Extract the error details
+- Use Gemini AI to summarize the error and propose a fix
+- Create an improvement task in Supabase
+- Send a Telegram notification with the summary
+
+## Lemon Squeezy Billing Setup
+
+1. Create products/variants in your [Lemon Squeezy](https://www.lemonsqueezy.com/) store for each plan tier (Solo, Pro, Team)
+2. Set the variant IDs in `.env`:
+   - `LEMON_SQUEEZY_SOLO_VARIANT_ID`
+   - `LEMON_SQUEEZY_PRO_VARIANT_ID`
+   - `LEMON_SQUEEZY_TEAM_VARIANT_ID`
+3. Set `LEMON_SQUEEZY_WEBHOOK_SECRET` from your Lemon Squeezy webhook settings
+4. Add webhook URL: `https://your-domain.com/webhooks/billing`
+5. Subscribe to events: `subscription_created`, `subscription_updated`, `subscription_cancelled`
+
+### Plan Tiers
+| Tier | Tasks/month | Error Analyses/month | Team Members |
+|------|-------------|----------------------|--------------|
+| Free | 10 | 5 | 1 |
+| Solo | Unlimited | 50 | 1 |
+| Pro | Unlimited | Unlimited | 1 |
+| Team | Unlimited | Unlimited | 5 |
+
 ## Key Flows
 
 1. **Task Creation:** Telegram message -> AI parses -> Task stored in Supabase -> Telegram confirmation
 2. **Approval:** Structural tasks require explicit approve/reject via Telegram buttons
 3. **Error Learning:** Sentry webhook -> AI summarizes crash + proposes fix -> Improvement task created -> Telegram alert
+4. **Billing:** Lemon Squeezy webhook -> Plan tier updated -> Feature limits enforced
+
+## Running Tests
+
+```bash
+pytest tests/ -v
+```
 
 ## Roadmap
 
 - [x] Phase 1: Backend skeleton + health endpoint
-- [ ] Phase 1: Task and approval engine
-- [ ] Phase 1: AI service (Gemini text-to-task)
-- [ ] Phase 1: Telegram bot integration
-- [ ] Phase 1: Sentry error learning loop
+- [x] Phase 1: Task CRUD engine
+- [x] Phase 1: AI service (Gemini text-to-task + error analysis)
+- [x] Phase 1: Telegram bot integration
+- [x] Phase 1: Sentry error learning loop
+- [x] Phase 1: Lemon Squeezy billing integration
 - [ ] Phase 2: Multi-tenant SaaS foundation
 - [ ] Phase 3: Web dashboard / Telegram Mini App
 

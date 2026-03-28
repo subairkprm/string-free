@@ -44,3 +44,10 @@ class TaskSource(StrEnum):
     API = "api"
     ERROR_AUTO = "error_auto"
     MANUAL = "manual"
+
+
+class PlanTier(StrEnum):
+    FREE = "free"
+    SOLO = "solo"
+    PRO = "pro"
+    TEAM = "team"
