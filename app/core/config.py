@@ -1,10 +1,16 @@
 from pydantic import AnyUrl, Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """String Free application settings.
     All values loaded from environment variables or .env file."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
     # Supabase
     supabase_url: AnyUrl = Field(alias="SUPABASE_URL")
@@ -24,10 +30,5 @@ class Settings(BaseSettings):
     environment: str = Field(default="local", alias="ENVIRONMENT")
     ai_delay_seconds: int = Field(default=4, alias="AI_DELAY_SECONDS")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
 
-
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]
