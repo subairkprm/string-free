@@ -13,18 +13,24 @@ class Settings(BaseSettings):
     )
 
     # Supabase
-    supabase_url: AnyUrl = Field(alias="SUPABASE_URL")
-    supabase_key: str = Field(alias="SUPABASE_KEY")
+    supabase_url: AnyUrl = Field(default="https://placeholder.supabase.co", alias="SUPABASE_URL")
+    supabase_key: str = Field(default="", alias="SUPABASE_KEY")
 
     # Google Gemini AI
-    gemini_api_key: str = Field(alias="GEMINI_API_KEY")
+    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
 
     # Telegram Bot
-    telegram_bot_token: str = Field(alias="TELEGRAM_BOT_TOKEN")
-    telegram_chat_id: str = Field(alias="TELEGRAM_CHAT_ID")
+    telegram_bot_token: str = Field(default="", alias="TELEGRAM_BOT_TOKEN")
+    telegram_chat_id: str = Field(default="", alias="TELEGRAM_CHAT_ID")
 
     # Sentry Error Tracking
     sentry_dsn: str | None = Field(default=None, alias="SENTRY_DSN")
+
+    # Lemon Squeezy Billing
+    lemon_squeezy_webhook_secret: str = Field(default="", alias="LEMON_SQUEEZY_WEBHOOK_SECRET")
+    lemon_squeezy_solo_variant_id: str = Field(default="", alias="LEMON_SQUEEZY_SOLO_VARIANT_ID")
+    lemon_squeezy_pro_variant_id: str = Field(default="", alias="LEMON_SQUEEZY_PRO_VARIANT_ID")
+    lemon_squeezy_team_variant_id: str = Field(default="", alias="LEMON_SQUEEZY_TEAM_VARIANT_ID")
 
     # Application
     environment: str = Field(default="local", alias="ENVIRONMENT")
