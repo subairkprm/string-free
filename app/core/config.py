@@ -1,5 +1,5 @@
-from pydantic_settings import BaseSettings
 from pydantic import AnyUrl, Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

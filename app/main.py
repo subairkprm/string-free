@@ -6,8 +6,8 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
 from app.api.routes import health
+from app.core.config import settings
 
 
 def create_app() -> FastAPI:
