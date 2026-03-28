@@ -55,7 +55,7 @@ async def parse_text_to_task(raw_text: str) -> dict:
                 if text.endswith("```"):
                     text = text[:-3]
                 text = text.strip()
-            return json.loads(text)
+            return json.loads(text)  # type: ignore[no-any-return]
         except (json.JSONDecodeError, Exception) as e:
             logger.warning("AI parse attempt %d failed: %s", attempt + 1, e)
             if attempt == _MAX_RETRIES:
@@ -92,7 +92,7 @@ async def summarize_error(error_payload: dict) -> dict:
                 if text.endswith("```"):
                     text = text[:-3]
                 text = text.strip()
-            return json.loads(text)
+            return json.loads(text)  # type: ignore[no-any-return]
         except (json.JSONDecodeError, Exception) as e:
             logger.warning("AI error summary attempt %d failed: %s", attempt + 1, e)
             if attempt == _MAX_RETRIES:

@@ -43,7 +43,7 @@ async def get_monthly_usage(user_id: str, feature: str) -> int:
     if feature == "tasks_per_month":
         result = (
             client.table("tasks")
-            .select("id", count="exact")
+            .select("id", count="exact")  # type: ignore[arg-type]
             .eq("user_id", user_id)
             .gte("created_at", _month_start())
             .execute()
@@ -51,7 +51,7 @@ async def get_monthly_usage(user_id: str, feature: str) -> int:
     elif feature == "error_analyses_per_month":
         result = (
             client.table("errors")
-            .select("id", count="exact")
+            .select("id", count="exact")  # type: ignore[arg-type]
             .eq("user_id", user_id)
             .gte("created_at", _month_start())
             .execute()

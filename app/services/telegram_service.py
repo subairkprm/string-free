@@ -5,6 +5,7 @@ import logging
 import httpx
 
 from app.core.config import settings
+from app.models.enums import TaskSource
 from app.services import ai_service, task_orchestrator
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ async def send_message(chat_id: str | int, text: str, reply_markup: dict | None 
         payload["reply_markup"] = reply_markup
     async with httpx.AsyncClient() as client:
         resp = await client.post(_api_url("sendMessage"), json=payload)
-        return resp.json()
+        return resp.json()  # type: ignore[no-any-return]
 
 
 async def send_notification(chat_id: str | int, message: str) -> dict:
@@ -36,7 +37,7 @@ async def answer_callback_query(callback_query_id: str, text: str = "") -> dict:
     payload = {"callback_query_id": callback_query_id, "text": text}
     async with httpx.AsyncClient() as client:
         resp = await client.post(_api_url("answerCallbackQuery"), json=payload)
-        return resp.json()
+        return resp.json()  # type: ignore[no-any-return]
 
 
 async def edit_message_text(
@@ -53,7 +54,7 @@ async def edit_message_text(
         payload["reply_markup"] = reply_markup
     async with httpx.AsyncClient() as client:
         resp = await client.post(_api_url("editMessageText"), json=payload)
-        return resp.json()
+        return resp.json()  # type: ignore[no-any-return]
 
 
 def _task_approval_keyboard(task_id: str) -> dict:
@@ -102,7 +103,7 @@ async def handle_command(update: dict) -> None:
             title=parsed.get("title", raw[:100]),
             description=parsed.get("description"),
             priority=parsed.get("priority", "medium"),
-            source="telegram",
+            source=TaskSource.TELEGRAM,
         )
         task_id = task.get("id", "unknown")
         await send_message(

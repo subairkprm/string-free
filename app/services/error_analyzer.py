@@ -4,6 +4,7 @@ import logging
 
 from app.core.config import settings
 from app.core.database import get_supabase_client
+from app.models.enums import TaskSource
 from app.services import ai_service, task_orchestrator, telegram_service
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ async def process_sentry_webhook(payload: dict) -> dict:
         title=f"[Error] {summary[:80]}",
         description=f"Summary: {summary}\n\nProposed fix: {proposed_fix}",
         priority=error_data.get("severity", "high"),
-        source="error_auto",
+        source=TaskSource.ERROR_AUTO,
     )
 
     # Send Telegram notification

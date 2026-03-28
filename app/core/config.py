@@ -1,4 +1,4 @@
-from pydantic import AnyUrl, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     )
 
     # Supabase
-    supabase_url: AnyUrl = Field(default="https://placeholder.supabase.co", alias="SUPABASE_URL")
+    supabase_url: str = Field(default="https://placeholder.supabase.co", alias="SUPABASE_URL")
     supabase_key: str = Field(default="", alias="SUPABASE_KEY")
 
     # Google Gemini AI
