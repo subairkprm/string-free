@@ -152,6 +152,46 @@ When Sentry fires an alert, String Free will:
 pytest tests/ -v
 ```
 
+## Deployment (Cloud Run)
+
+String Free deploys to Google Cloud Run (me-central1, Doha) via GitHub Actions.
+
+### Prerequisites
+
+1. **GCP Project** with Cloud Run API and Artifact Registry enabled
+2. **Service Account** with roles: `roles/run.admin`, `roles/iam.serviceAccountUser`
+3. **GitHub Secrets** configured in your repo settings:
+   - `GCP_SA_KEY` — Service account JSON key
+
+### Environment Variables on Cloud Run
+
+Set these in the Cloud Run console or via `gcloud`:
+
+```bash
+gcloud run services update string-free \
+  --region me-central1 \
+  --set-env-vars "SUPABASE_URL=<your-url>,SUPABASE_KEY=<your-key>,GEMINI_API_KEY=<your-key>,TELEGRAM_BOT_TOKEN=<your-token>,TELEGRAM_CHAT_ID=<your-chat-id>,LEMON_SQUEEZY_WEBHOOK_SECRET=<your-secret>,SENTRY_DSN=<optional>"
+```
+
+### Manual Deploy
+
+Push to `main` triggers automatic deployment. For manual:
+
+```bash
+# Via GitHub Actions
+gh workflow run deploy.yml
+
+# Via gcloud CLI
+gcloud run deploy string-free \
+  --source . \
+  --region me-central1 \
+  --allow-unauthenticated
+```
+
+### Landing Page
+
+The `landing/` directory contains the marketing site. Deploy it separately to any static host (Vercel, Netlify, Cloudflare Pages) or serve from a CDN.
+
 ## Roadmap
 
 - [x] Phase 1: Backend skeleton + health endpoint
@@ -160,6 +200,9 @@ pytest tests/ -v
 - [x] Phase 1: Telegram bot integration
 - [x] Phase 1: Sentry error learning loop
 - [x] Phase 1: Lemon Squeezy billing integration
+- [x] Landing page
+- [x] CI/CD pipeline (GitHub Actions)
+- [x] Cloud Run deployment config
 - [ ] Phase 2: Multi-tenant SaaS foundation
 - [ ] Phase 3: Web dashboard / Telegram Mini App
 

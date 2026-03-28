@@ -44,43 +44,37 @@ jobs:
   deploy:
     needs: [build-and-push]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Deployment placeholder
-        run: |
-          echo "Image built and pushed: ghcr.io/${{ github.repository }}:${{ github.sha }}"
-          echo "Deploy step is a placeholder — configure one of the options below."
+      - uses: actions/checkout@v4
 
-      # ---------------------------------------------------------------
-      # Option 1: Railway
-      # - Install the Railway CLI and trigger a deployment:
-      #   - run: npm install -g @railway/cli
-      #   - run: railway up --service string-free
-      #   env:
-      #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      # ---------------------------------------------------------------
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # ---------------------------------------------------------------
-      # Option 2: Render
-      # - Trigger a deploy hook via curl:
-      #   - run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-      # ---------------------------------------------------------------
-
-      # ---------------------------------------------------------------
-      # Option 3: Google Cloud Run
-      # - Authenticate and deploy:
-      #   - uses: google-github-actions/auth@v2
-      #     with:
-      #       credentials_json: ${{ secrets.GCP_SA_KEY }}
-      #   - uses: google-github-actions/deploy-cloudrun@v2
-      #     with:
-      #       service: string-free
-      #       region: us-central1
-      #       image: ghcr.io/${{ github.repository }}:${{ github.sha }}
-      # ---------------------------------------------------------------
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: string-free
+          region: me-central1
+          image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          flags: >-
+            --allow-unauthenticated
+            --port=8000
+            --memory=512Mi
+            --cpu=1
+            --min-instances=0
+            --max-instances=3
+            --set-env-vars=ENVIRONMENT=production
 
       - name: Post deployment summary
         run: |
           echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service:** string-free" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** me-central1 (Doha)" >> $GITHUB_STEP_SUMMARY
           echo "- **Image:** ghcr.io/${{ github.repository }}:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
