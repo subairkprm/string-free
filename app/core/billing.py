@@ -11,6 +11,31 @@ from app.models.enums import PlanTier
 logger = logging.getLogger(__name__)
 
 
+# Plan tier limits for various features
+PLAN_LIMITS = {
+    PlanTier.FREE: {
+        "tasks_per_month": 10,
+        "error_analyses": 5,
+        "opportunity_analyses": 0,  # No access to opportunity analysis
+    },
+    PlanTier.SOLO: {
+        "tasks_per_month": -1,  # Unlimited
+        "error_analyses": 50,
+        "opportunity_analyses": 5,  # 5 analyses per month
+    },
+    PlanTier.PRO: {
+        "tasks_per_month": -1,  # Unlimited
+        "error_analyses": -1,  # Unlimited
+        "opportunity_analyses": -1,  # Unlimited
+    },
+    PlanTier.TEAM: {
+        "tasks_per_month": -1,  # Unlimited
+        "error_analyses": -1,  # Unlimited
+        "opportunity_analyses": -1,  # Unlimited + shared across team
+    },
+}
+
+
 def _get_variant_to_plan_map() -> dict[str, PlanTier]:
     """Map Lemon Squeezy variant IDs to plan tiers."""
     mapping: dict[str, PlanTier] = {}
@@ -104,3 +129,34 @@ async def _upsert_subscription(data: dict) -> None:
         on_conflict="user_email",
     ).execute()
     logger.info("Subscription upserted for %s → %s", user_email, plan_tier)
+
+
+def get_plan_limits(plan_tier: PlanTier) -> dict:
+    """Get feature limits for a given plan tier."""
+    return PLAN_LIMITS.get(plan_tier, PLAN_LIMITS[PlanTier.FREE])
+
+
+def check_feature_access(plan_tier: PlanTier, feature: str, current_usage: int = 0) -> bool:
+    """Check if a user has access to a feature based on their plan tier.
+
+    Args:
+        plan_tier: User's current plan tier
+        feature: Feature to check (e.g., 'opportunity_analyses')
+        current_usage: Current usage count for the feature this period
+
+    Returns:
+        True if user can access the feature, False otherwise
+    """
+    limits = get_plan_limits(plan_tier)
+    feature_limit = limits.get(feature, 0)
+
+    # -1 means unlimited
+    if feature_limit == -1:
+        return True
+
+    # 0 means no access
+    if feature_limit == 0:
+        return False
+
+    # Check if within limit
+    return current_usage < feature_limit

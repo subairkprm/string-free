@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 from app.models.enums import (
     ApprovalResult,
+    OpportunityStatus,
+    OpportunityType,
     Severity,
     TaskSource,
     TaskStatus,
@@ -157,3 +159,89 @@ class AIErrorSummary(BaseModel):
 
     summary: str
     proposed_fix: str
+
+
+# --- Income Opportunity Schemas ---
+
+
+class OpportunityCreate(BaseModel):
+    user_id: str
+    title: str
+    description: str
+    opportunity_type: OpportunityType
+    confidence_score: float | None = None
+    estimated_effort: str | None = None
+    estimated_revenue_potential: str | None = None
+    source_task_ids: list[UUID] | None = None
+    ai_reasoning: str | None = None
+
+
+class OpportunityUpdate(BaseModel):
+    status: OpportunityStatus | None = None
+    user_notes: str | None = None
+    user_rating: int | None = None
+
+
+class OpportunityResponse(BaseModel):
+    id: UUID
+    user_id: str
+    title: str
+    description: str
+    opportunity_type: OpportunityType
+    status: OpportunityStatus
+    confidence_score: float | None = None
+    estimated_effort: str | None = None
+    estimated_revenue_potential: str | None = None
+    source_task_ids: list[UUID] | None = None
+    analysis_date: datetime
+    ai_reasoning: str | None = None
+    user_notes: str | None = None
+    user_rating: int | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class OpportunityAnalysisRequest(BaseModel):
+    days: int = 30
+    force_refresh: bool = False
+
+
+class OpportunityRatingRequest(BaseModel):
+    rating: int
+    feedback: str | None = None
+
+
+# --- AI Opportunity Analysis Schemas ---
+
+
+class AIOpportunity(BaseModel):
+    """Single opportunity identified by AI."""
+
+    type: str
+    title: str
+    description: str
+    confidence_score: float
+    reasoning: str
+    estimated_effort: str
+    revenue_potential: str
+
+
+class AIOpportunityAnalysis(BaseModel):
+    """Response from AI opportunity detection."""
+
+    opportunities: list[AIOpportunity]
+
+
+class AIPattern(BaseModel):
+    """Pattern identified from task history."""
+
+    pattern_type: str
+    description: str
+    opportunity_suggestion: str
+    confidence_score: float
+
+
+class AIPatternAnalysis(BaseModel):
+    """Response from AI pattern analysis."""
+
+    patterns: list[AIPattern]

@@ -9,6 +9,23 @@ create type task_status as enum (
 
 create type severity as enum ('low', 'medium', 'high', 'critical');
 
+create type opportunity_type as enum (
+  'monetization',
+  'consulting',
+  'saas',
+  'marketplace',
+  'affiliate',
+  'education'
+);
+
+create type opportunity_status as enum (
+  'identified',
+  'evaluating',
+  'pursuing',
+  'implemented',
+  'dismissed'
+);
+
 -- Tasks
 create table if not exists tasks (
   id uuid primary key default gen_random_uuid(),
@@ -65,4 +82,45 @@ create table if not exists improvement_tasks (
   source_error_id uuid references errors(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+-- Income Opportunities
+create table if not exists income_opportunities (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  title text not null,
+  description text not null,
+  opportunity_type opportunity_type not null,
+  status opportunity_status not null default 'identified',
+
+  -- Analysis metadata
+  confidence_score decimal(3,2),
+  estimated_effort text,
+  estimated_revenue_potential text,
+
+  -- Source tracking
+  source_task_ids uuid[],
+  analysis_date timestamptz not null default now(),
+  ai_reasoning text,
+
+  -- User feedback
+  user_notes text,
+  user_rating int,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Index for efficient user queries
+create index if not exists idx_opportunities_user_status
+  on income_opportunities(user_id, status);
+
+-- Opportunity Insights
+create table if not exists opportunity_insights (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  insight_type text not null,
+  insight_text text not null,
+  supporting_data jsonb,
+  created_at timestamptz not null default now()
 );

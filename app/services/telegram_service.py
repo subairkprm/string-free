@@ -5,6 +5,7 @@ import logging
 import httpx
 
 from app.core.config import settings
+from app.core.database import supabase
 from app.models.enums import TaskSource
 from app.services import ai_service, task_orchestrator
 
@@ -147,6 +148,115 @@ async def handle_command(update: dict) -> None:
             "/task &lt;message&gt; — AI parses your message into a task\n"
             "/list — Show your active tasks\n"
             "/done &lt;id&gt; — Mark a task as complete\n"
+            "/opportunities — List income opportunities\n"
+            "/opportunity &lt;id&gt; — Get details on an opportunity\n"
+            "/pursue &lt;id&gt; — Mark opportunity as pursuing\n"
+            "/help — Show this reference",
+        )
+
+    elif text.startswith("/opportunities"):
+        # Fetch opportunities for user
+        response = (
+            supabase.table("income_opportunities")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(10)
+            .execute()
+        )
+
+        if not response.data:
+            await send_message(
+                chat_id,
+                "<b>No Opportunities Found</b>\n\n"
+                "Use /task to create tasks. I'll analyze them and suggest income opportunities!",
+            )
+            return
+
+        lines = ["<b>💰 Your Income Opportunities:</b>\n"]
+        for opp in response.data:
+            status = opp.get("status", "identified")
+            title = opp.get("title", "Untitled")[:50]
+            opp_id = str(opp.get("id", ""))[:8]
+            confidence = opp.get("confidence_score", 0.0)
+            lines.append(
+                f"• [{status}] {title}\n  Confidence: {confidence:.0%} | ID: <code>{opp_id}</code>"
+            )
+
+        await send_message(chat_id, "\n".join(lines))
+
+    elif text.startswith("/opportunity "):
+        opp_id = text[13:].strip()
+        if not opp_id:
+            await send_message(chat_id, "Please provide an opportunity ID")
+            return
+
+        response = (
+            supabase.table("income_opportunities")
+            .select("*")
+            .eq("id", opp_id)
+            .single()
+            .execute()
+        )
+
+        if not response.data:
+            await send_message(chat_id, f"Opportunity <code>{opp_id[:8]}</code> not found.")
+            return
+
+        opp = response.data
+        message_text = (
+            f"<b>💡 Opportunity Details</b>\n\n"
+            f"<b>Title:</b> {opp.get('title', 'Untitled')}\n"
+            f"<b>Type:</b> {opp.get('opportunity_type', 'unknown')}\n"
+            f"<b>Status:</b> {opp.get('status', 'identified')}\n"
+            f"<b>Confidence:</b> {opp.get('confidence_score', 0.0):.0%}\n\n"
+            f"<b>Description:</b>\n{opp.get('description', 'No description')}\n\n"
+            f"<b>Effort:</b> {opp.get('estimated_effort', 'unknown')}\n"
+            f"<b>Revenue Potential:</b> {opp.get('estimated_revenue_potential', 'unknown')}"
+        )
+
+        keyboard = {
+            "inline_keyboard": [
+                [
+                    {"text": "Pursue", "callback_data": f"pursue_opp:{opp_id}"},
+                    {"text": "Dismiss", "callback_data": f"dismiss_opp:{opp_id}"},
+                ]
+            ]
+        }
+
+        await send_message(chat_id, message_text, reply_markup=keyboard)
+
+    elif text.startswith("/pursue "):
+        opp_id = text[8:].strip()
+        if not opp_id:
+            await send_message(chat_id, "Please provide an opportunity ID")
+            return
+
+        response = (
+            supabase.table("income_opportunities")
+            .update({"status": "pursuing", "updated_at": "now()"})
+            .eq("id", opp_id)
+            .execute()
+        )
+
+        if response.data:
+            await send_message(
+                chat_id, f"✅ Opportunity <code>{opp_id[:8]}</code> marked as pursuing!"
+            )
+        else:
+            await send_message(chat_id, f"Opportunity <code>{opp_id[:8]}</code> not found.")
+
+    elif text.startswith("/help"):
+        await send_message(
+            chat_id,
+            "<b>String Free Commands:</b>\n\n"
+            "/start — Welcome message\n"
+            "/task &lt;message&gt; — AI parses your message into a task\n"
+            "/list — Show your active tasks\n"
+            "/done &lt;id&gt; — Mark a task as complete\n"
+            "/opportunities — List income opportunities\n"
+            "/opportunity &lt;id&gt; — Get details on an opportunity\n"
+            "/pursue &lt;id&gt; — Mark opportunity as pursuing\n"
             "/help — Show this reference",
         )
 
@@ -210,6 +320,32 @@ async def handle_callback_query(update: dict) -> None:
                 f"Task <code>{tid[:8]}</code> — Priority set to <b>{priority}</b>",
             )
             await answer_callback_query(callback_id, f"Priority → {priority}")
+
+    elif action == "pursue_opp":
+        # Mark opportunity as pursuing
+        supabase.table("income_opportunities").update(
+            {"status": "pursuing", "updated_at": "now()"}
+        ).eq("id", task_id).execute()
+
+        await edit_message_text(
+            chat_id,
+            message_id,
+            f"✅ Opportunity <code>{task_id[:8]}</code> — Now <b>Pursuing</b>",
+        )
+        await answer_callback_query(callback_id, "Marked as pursuing!")
+
+    elif action == "dismiss_opp":
+        # Mark opportunity as dismissed
+        supabase.table("income_opportunities").update(
+            {"status": "dismissed", "updated_at": "now()"}
+        ).eq("id", task_id).execute()
+
+        await edit_message_text(
+            chat_id,
+            message_id,
+            f"❌ Opportunity <code>{task_id[:8]}</code> — <b>Dismissed</b>",
+        )
+        await answer_callback_query(callback_id, "Opportunity dismissed.")
 
 
 async def process_update(update: dict) -> None:
