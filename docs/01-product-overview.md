@@ -4,7 +4,7 @@
 
 **Name:** String Free
 
-**Mission:** Help individual builders and small teams ship serious software with fewer errors and less chaos by turning unstructured input (messages, ideas, crashes) into governed tasks, approvals, and improvement work, controlled primarily through Telegram and backed by an auditable backend.
+**Mission:** Help individual builders and small teams ship serious software with fewer errors and less chaos, while identifying income opportunities from their work patterns. Turn unstructured input (messages, ideas, crashes) into governed tasks, approvals, and improvement work, plus AI-powered monetization insights—all controlled primarily through Telegram and backed by an auditable backend.
 
 ## 2. Target Users and Problems
 
@@ -17,6 +17,7 @@
 - Errors repeat because there is no structured error-to-learning loop.
 - Governance (approvals, release discipline) is either absent or too heavy.
 - Existing tools (Jira, big dashboards) feel too complex for tiny teams.
+- Missed monetization opportunities because patterns aren't visible.
 
 ## 3. Value Proposition
 
@@ -25,6 +26,7 @@ String Free provides:
 - An AI-assisted brain that converts free text into structured tasks and error traces into human-readable summaries with proposed fixes.
 - A lightweight governance layer with structural vs non-structural task classification.
 - An error learning loop that classifies, links, and reviews errors periodically.
+- Income opportunity analysis that identifies monetization potential from work patterns.
 
 ## 4. Product Scope (Phase 1)
 
@@ -45,6 +47,7 @@ String Free provides:
 2. As the same builder, I can mark a task as structural and require explicit approval before deployment.
 3. When my backend crashes, the system catches the error, summarizes it, proposes a fix, and notifies me in Telegram.
 4. I can ask the bot for a daily or weekly summary of open tasks, recent errors, and improvement work.
+5. The system analyzes my work patterns and suggests income opportunities I might be missing (consulting, SaaS, courses, etc.).
 
 ## 6. Future Scope (Phase 2+)
 
@@ -52,3 +55,5 @@ String Free provides:
 - Simple pricing plans and usage limits.
 - Optional web dashboard or Telegram Mini App with modern UI.
 - Additional integrations (GitHub, Jira, email, etc.).
+- Advanced opportunity tracking with trend analysis and market validation.
+- Automated income opportunity reports (weekly/monthly summaries).

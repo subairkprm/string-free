@@ -6,7 +6,7 @@ Telegram-first task, approval, and error learning engine powered by FastAPI + Su
 
 ## What is this?
 
-String Free helps individual builders and small teams ship software with fewer errors and less chaos. Send a message to Telegram, get back a structured task. When your backend crashes, get an AI-generated summary and proposed fix delivered to your chat.
+String Free helps individual builders and small teams ship software with fewer errors and less chaos. Send a message to Telegram, get back a structured task. When your backend crashes, get an AI-generated summary and proposed fix delivered to your chat. Get AI-powered income opportunity insights based on your work patterns.
 
 ## Tech Stack
 
@@ -23,8 +23,8 @@ String Free helps individual builders and small teams ship software with fewer e
 app/
   core/           # config, database, auth, billing
   models/         # enums, Pydantic schemas
-  services/       # task_orchestrator, ai_service, error_analyzer, telegram_service
-  api/routes/     # health, tasks, telegram, webhooks
+  services/       # task_orchestrator, ai_service, error_analyzer, telegram_service, opportunity_analyzer
+  api/routes/     # health, tasks, telegram, webhooks, opportunities
   main.py
 database/
   schema.sql      # Supabase schema (run in SQL Editor)
@@ -88,6 +88,16 @@ Open http://localhost:8000/health/ to verify.
 | POST | `/webhooks/sentry` | Receive Sentry error alerts |
 | POST | `/webhooks/billing` | Receive Lemon Squeezy billing events |
 
+### Income Opportunities
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/opportunities/` | List income opportunities (query: `user_id`, `status`, `type`, `limit`, `offset`) |
+| GET | `/opportunities/{opportunity_id}` | Get a single opportunity |
+| POST | `/opportunities/analyze` | Trigger AI analysis of recent tasks (body: `user_id`, `days`, `force_refresh`) |
+| PATCH | `/opportunities/{opportunity_id}` | Update opportunity status or notes |
+| POST | `/opportunities/{opportunity_id}/rate` | Rate an opportunity (1-5 stars) |
+| DELETE | `/opportunities/{opportunity_id}` | Dismiss an opportunity |
+
 ## Telegram Bot Setup
 
 1. Create a bot via [@BotFather](https://t.me/BotFather) and get the token
@@ -105,6 +115,9 @@ Open http://localhost:8000/health/ to verify.
 - `/task <message>` — AI parses your message into a structured task
 - `/list` — Show your active tasks with status
 - `/done <id>` — Mark a task as complete
+- `/opportunities` — List income opportunities identified from your work
+- `/opportunity <id>` — Get details on a specific opportunity
+- `/pursue <id>` — Mark an opportunity as actively pursuing
 - `/help` — Command reference
 
 ## Sentry Webhook Configuration
@@ -132,12 +145,12 @@ When Sentry fires an alert, String Free will:
 5. Subscribe to events: `subscription_created`, `subscription_updated`, `subscription_cancelled`
 
 ### Plan Tiers
-| Tier | Tasks/month | Error Analyses/month | Team Members |
-|------|-------------|----------------------|--------------|
-| Free | 10 | 5 | 1 |
-| Solo | Unlimited | 50 | 1 |
-| Pro | Unlimited | Unlimited | 1 |
-| Team | Unlimited | Unlimited | 5 |
+| Tier | Tasks/month | Error Analyses/month | Opportunity Analyses/month | Team Members |
+|------|-------------|----------------------|----------------------------|--------------|
+| Free | 10 | 5 | 0 | 1 |
+| Solo | Unlimited | 50 | 5 | 1 |
+| Pro | Unlimited | Unlimited | Unlimited | 1 |
+| Team | Unlimited | Unlimited | Unlimited | 5 |
 
 ## Key Flows
 
@@ -145,6 +158,7 @@ When Sentry fires an alert, String Free will:
 2. **Approval:** Structural tasks require explicit approve/reject via Telegram buttons
 3. **Error Learning:** Sentry webhook -> AI summarizes crash + proposes fix -> Improvement task created -> Telegram alert
 4. **Billing:** Lemon Squeezy webhook -> Plan tier updated -> Feature limits enforced
+5. **Income Opportunities:** Tasks analyzed -> AI identifies patterns -> Opportunities suggested -> User can pursue or dismiss
 
 ## Running Tests
 
@@ -203,8 +217,10 @@ The `landing/` directory contains the marketing site. Deploy it separately to an
 - [x] Landing page
 - [x] CI/CD pipeline (GitHub Actions)
 - [x] Cloud Run deployment config
+- [x] Phase 2.5: Income opportunity analysis (AI-powered monetization insights)
 - [ ] Phase 2: Multi-tenant SaaS foundation
-- [ ] Phase 3: Web dashboard / Telegram Mini App
+- [ ] Phase 3: Web dashboard / Telegram Mini App with opportunity visualization
+- [ ] Phase 3: Advanced opportunity tracking and trend analysis
 
 ## License
 
