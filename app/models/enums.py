@@ -51,3 +51,20 @@ class PlanTier(StrEnum):
     SOLO = "solo"
     PRO = "pro"
     TEAM = "team"
+
+
+class OpportunityType(StrEnum):
+    MONETIZATION = "monetization"
+    CONSULTING = "consulting"
+    SAAS = "saas"
+    MARKETPLACE = "marketplace"
+    AFFILIATE = "affiliate"
+    EDUCATION = "education"
+
+
+class OpportunityStatus(StrEnum):
+    IDENTIFIED = "identified"
+    EVALUATING = "evaluating"
+    PURSUING = "pursuing"
+    IMPLEMENTED = "implemented"
+    DISMISSED = "dismissed"

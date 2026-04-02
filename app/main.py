@@ -11,7 +11,7 @@ import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, tasks, telegram, webhooks
+from app.api.routes import health, opportunities, tasks, telegram, webhooks
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -71,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
     app.include_router(telegram.router, prefix="/telegram", tags=["telegram"])
     app.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
+    app.include_router(opportunities.router, prefix="/opportunities", tags=["opportunities"])
 
     return app
 
