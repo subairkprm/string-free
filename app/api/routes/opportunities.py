@@ -29,7 +29,8 @@ async def list_opportunities(
 ) -> list[OpportunityResponse]:
     """List income opportunities for a user."""
     try:
-        query = get_supabase_client().table("income_opportunities").select("*").eq("user_id", user_id)
+        client = get_supabase_client()
+        query = client.table("income_opportunities").select("*").eq("user_id", user_id)
 
         if status:
             query = query.eq("status", status)
@@ -50,8 +51,9 @@ async def list_opportunities(
 async def get_opportunity(opportunity_id: UUID) -> OpportunityResponse:
     """Get a single opportunity by ID."""
     try:
+        client = get_supabase_client()
         response = (
-            get_supabase_client().table("income_opportunities")
+            client.table("income_opportunities")
             .select("*")
             .eq("id", str(opportunity_id))
             .single()
@@ -79,10 +81,11 @@ async def analyze_opportunities(
         # Fetch recent tasks for the user
         from datetime import datetime, timedelta
 
+        client = get_supabase_client()
         cutoff_date = datetime.now() - timedelta(days=request.days)
 
         tasks_response = (
-            get_supabase_client().table("tasks")
+            client.table("tasks")
             .select("*")
             .gte("created_at", cutoff_date.isoformat())
             .order("created_at", desc=True)
@@ -119,7 +122,7 @@ async def analyze_opportunities(
                     "ai_reasoning": pattern.get("description", ""),
                 }
 
-                get_supabase_client().table("income_opportunities").insert(opportunity_data).execute()
+                client.table("income_opportunities").insert(opportunity_data).execute()
                 opportunities_created += 1
 
         return {
@@ -140,11 +143,12 @@ async def update_opportunity(
 ) -> OpportunityResponse:
     """Update an opportunity (status, notes, etc.)."""
     try:
+        client = get_supabase_client()
         update_data = update.model_dump(exclude_unset=True)
         update_data["updated_at"] = "now()"
 
         response = (
-            get_supabase_client().table("income_opportunities")
+            client.table("income_opportunities")
             .update(update_data)
             .eq("id", str(opportunity_id))
             .execute()
@@ -168,6 +172,7 @@ async def rate_opportunity(
 ) -> dict:
     """Rate the usefulness of an opportunity suggestion."""
     try:
+        client = get_supabase_client()
         if not 1 <= rating_request.rating <= 5:
             raise HTTPException(
                 status_code=400, detail="Rating must be between 1 and 5"
@@ -181,7 +186,7 @@ async def rate_opportunity(
         if rating_request.feedback:
             # Could store feedback in a separate table or append to user_notes
             current = (
-                get_supabase_client().table("income_opportunities")
+                client.table("income_opportunities")
                 .select("user_notes")
                 .eq("id", str(opportunity_id))
                 .single()
@@ -195,7 +200,7 @@ async def rate_opportunity(
             update_data["user_notes"] = new_notes
 
         response = (
-            get_supabase_client().table("income_opportunities")
+            client.table("income_opportunities")
             .update(update_data)
             .eq("id", str(opportunity_id))
             .execute()
@@ -221,8 +226,9 @@ async def rate_opportunity(
 async def dismiss_opportunity(opportunity_id: UUID) -> dict:
     """Dismiss an opportunity (set status to dismissed)."""
     try:
+        client = get_supabase_client()
         response = (
-            get_supabase_client().table("income_opportunities")
+            client.table("income_opportunities")
             .update({"status": "dismissed", "updated_at": "now()"})
             .eq("id", str(opportunity_id))
             .execute()
