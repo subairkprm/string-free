@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 
-from app.core.database import supabase
+from app.core.database import get_supabase_client
 from app.models.schemas import (
     OpportunityAnalysisRequest,
     OpportunityCreate,
@@ -29,7 +29,7 @@ async def list_opportunities(
 ) -> list[OpportunityResponse]:
     """List income opportunities for a user."""
     try:
-        query = supabase.table("income_opportunities").select("*").eq("user_id", user_id)
+        query = get_supabase_client().table("income_opportunities").select("*").eq("user_id", user_id)
 
         if status:
             query = query.eq("status", status)
@@ -51,7 +51,7 @@ async def get_opportunity(opportunity_id: UUID) -> OpportunityResponse:
     """Get a single opportunity by ID."""
     try:
         response = (
-            supabase.table("income_opportunities")
+            get_supabase_client().table("income_opportunities")
             .select("*")
             .eq("id", str(opportunity_id))
             .single()
@@ -82,7 +82,7 @@ async def analyze_opportunities(
         cutoff_date = datetime.now() - timedelta(days=request.days)
 
         tasks_response = (
-            supabase.table("tasks")
+            get_supabase_client().table("tasks")
             .select("*")
             .gte("created_at", cutoff_date.isoformat())
             .order("created_at", desc=True)
@@ -119,7 +119,7 @@ async def analyze_opportunities(
                     "ai_reasoning": pattern.get("description", ""),
                 }
 
-                supabase.table("income_opportunities").insert(opportunity_data).execute()
+                get_supabase_client().table("income_opportunities").insert(opportunity_data).execute()
                 opportunities_created += 1
 
         return {
@@ -144,7 +144,7 @@ async def update_opportunity(
         update_data["updated_at"] = "now()"
 
         response = (
-            supabase.table("income_opportunities")
+            get_supabase_client().table("income_opportunities")
             .update(update_data)
             .eq("id", str(opportunity_id))
             .execute()
@@ -181,7 +181,7 @@ async def rate_opportunity(
         if rating_request.feedback:
             # Could store feedback in a separate table or append to user_notes
             current = (
-                supabase.table("income_opportunities")
+                get_supabase_client().table("income_opportunities")
                 .select("user_notes")
                 .eq("id", str(opportunity_id))
                 .single()
@@ -195,7 +195,7 @@ async def rate_opportunity(
             update_data["user_notes"] = new_notes
 
         response = (
-            supabase.table("income_opportunities")
+            get_supabase_client().table("income_opportunities")
             .update(update_data)
             .eq("id", str(opportunity_id))
             .execute()
@@ -222,7 +222,7 @@ async def dismiss_opportunity(opportunity_id: UUID) -> dict:
     """Dismiss an opportunity (set status to dismissed)."""
     try:
         response = (
-            supabase.table("income_opportunities")
+            get_supabase_client().table("income_opportunities")
             .update({"status": "dismissed", "updated_at": "now()"})
             .eq("id", str(opportunity_id))
             .execute()
