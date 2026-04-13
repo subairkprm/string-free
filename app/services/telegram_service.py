@@ -5,7 +5,7 @@ import logging
 import httpx
 
 from app.core.config import settings
-from app.core.database import supabase
+from app.core.database import get_supabase_client
 from app.models.enums import TaskSource
 from app.services import ai_service, task_orchestrator
 
@@ -80,6 +80,8 @@ async def handle_command(update: dict) -> None:
 
     if not chat_id or not text:
         return
+
+    client = get_supabase_client()
 
     if text.startswith("/start"):
         await send_message(
@@ -157,7 +159,7 @@ async def handle_command(update: dict) -> None:
     elif text.startswith("/opportunities"):
         # Fetch opportunities for user
         response = (
-            supabase.table("income_opportunities")
+            client.table("income_opportunities")
             .select("*")
             .eq("user_id", user_id)
             .order("created_at", desc=True)
@@ -192,7 +194,7 @@ async def handle_command(update: dict) -> None:
             return
 
         response = (
-            supabase.table("income_opportunities")
+            client.table("income_opportunities")
             .select("*")
             .eq("id", opp_id)
             .single()
@@ -233,7 +235,7 @@ async def handle_command(update: dict) -> None:
             return
 
         response = (
-            supabase.table("income_opportunities")
+            client.table("income_opportunities")
             .update({"status": "pursuing", "updated_at": "now()"})
             .eq("id", opp_id)
             .execute()
@@ -273,6 +275,7 @@ async def handle_callback_query(update: dict) -> None:
     if not data or not chat_id:
         return
 
+    client = get_supabase_client()
     action, _, task_id = data.partition(":")
 
     if action == "approve":
@@ -323,7 +326,7 @@ async def handle_callback_query(update: dict) -> None:
 
     elif action == "pursue_opp":
         # Mark opportunity as pursuing
-        supabase.table("income_opportunities").update(
+        client.table("income_opportunities").update(
             {"status": "pursuing", "updated_at": "now()"}
         ).eq("id", task_id).execute()
 
@@ -336,7 +339,7 @@ async def handle_callback_query(update: dict) -> None:
 
     elif action == "dismiss_opp":
         # Mark opportunity as dismissed
-        supabase.table("income_opportunities").update(
+        client.table("income_opportunities").update(
             {"status": "dismissed", "updated_at": "now()"}
         ).eq("id", task_id).execute()
 
